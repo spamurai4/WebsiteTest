@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR Pass Monitor</title>
+<style>
+body {
+   font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8e8e8;
+            color: #4a2c2a;
+        }
+        h2, h3 {
+            color: #d4a5a5;
+        }
+        .header img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            display: block;
+border-radius: 15px;
+        }
+        #log {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: #fffaf0;
+            border-radius: 10px;
+        }
+        th, td {
+            border: 1px solid #d4a5a5;
+            padding: 8px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #d4a5a5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #b37b7b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="head.png" alt="Header Image">
+    </div>
+<br><br>
+  
+    <input type="text" id="studentName" placeholder="Enter your name">
+    <button onclick="checkOut()">Go Out</button>
+    <button onclick="checkIn()">Return</button>
+
+    <br><br>
+    <table>
+        <tr><th>Name</th><th>Date</th><th>Time Out</th><th>Return Time</th><th>Duration</th></tr>
+        <tbody id="log"></tbody>
+    </table>
+    <button onclick="downloadLog()">Download Log</button>
+
+    <script>
+        let logEntries = [];
+
+        function checkOut() {
+            let name = document.getElementById('studentName').value.trim();
+            if (name === '') return alert('Enter a name');
+            let now = new Date();
+            let date = now.toLocaleDateString();
+            let timeOut = now.toLocaleTimeString();
+            logEntries.push({ name, date, timeOut, returnTime: '', duration: '' });
+            updateLog();
+        }
+
+        function checkIn() {
+            let name = document.getElementById('studentName').value.trim();
+            let entry = logEntries.find(s => s.name === name && s.returnTime === '');
+            if (!entry) return alert('Student not found or already returned');
+            let now = new Date();
+            entry.returnTime = now.toLocaleTimeString();
+            let timeOutDate = new Date(`${entry.date} ${entry.timeOut}`);
+            entry.duration = calculateDuration(timeOutDate, now);
+            updateLog();
+        }
+
+        function calculateDuration(start, end) {
+            let diffMs = end - start;
+            let minutes = Math.floor((diffMs / 1000) / 60);
+            let seconds = Math.floor((diffMs / 1000) % 60);
+            return `${minutes}m ${seconds}s`;
+        }
+
+        function updateLog() {
+            let logTable = document.getElementById('log');
+            logTable.innerHTML = '';
+            logEntries.forEach((s) => {
+                logTable.innerHTML += `<tr><td>${s.name}</td><td>${s.date}</td><td>${s.timeOut}</td><td>${s.returnTime || ''}</td><td>${s.duration || ''}</td></tr>`;
+            });
+        }
+
+        function downloadLog() {
+            let csv = 'Name,Date,Time Out,Return Time,Duration\n' + logEntries.map(s => `${s.name},${s.date},${s.timeOut},${s.returnTime},${s.duration}`).join('\n');
+            let blob = new Blob([csv], { type: 'text/csv' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'CR_Pass_Log.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
